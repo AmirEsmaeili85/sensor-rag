@@ -37,6 +37,9 @@ class SQLRetriever:
         if operation not in allowed_operations:
             raise ValueError(f"Unsupported operation: {operation}")
 
+        if sensor_id is None:
+            raise ValueError("Sensor ID is required for SQL queries")
+
         sql_operation = allowed_operations[operation]
 
         sql = f"""
@@ -50,15 +53,11 @@ class SQLRetriever:
 
         conn = psycopg.connect(**DB_CONFIG)
 
-        with conn.cursor() as cur:
-
-            cur.execute(
-                sql,
-                (sensor_id,)
-            )
-
-            result = cur.fetchone()
-
-        conn.close()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(sql, (sensor_id,))
+                result = cur.fetchone()
+        finally:
+            conn.close()
 
         return result
